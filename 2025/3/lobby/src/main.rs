@@ -16,33 +16,31 @@ fn main() {
     println!("{sum}");
 }
 
-fn find_max_joltage(bank: &Vec<u8>, n: usize) -> u128 {
-    let mut maxs = Vec::new();
-    let mut max_index = 0;
-    for i in (0..=n-1).rev() {
-        let slice = &bank[max_index..bank.len() - i];
-        let (max, index) = find_max_in_slice(max_index, bank.len() - i, slice);
-        maxs.push(max);
-        max_index = index + 1;
+fn find_max_joltage(bank: &[u8], n: usize) -> usize {
+    let mut joltage = 0;
+    let mut index = 0;
+    for i in (0..=n - 1).rev() {
+        let slice = &bank[index..bank.len() - i];
+        let (max, rel) = find_max_in_slice(slice);
+        index = index + rel + 1;
+        joltage = joltage * 10 + max as usize;
     }
 
-    maxs.iter()
-        .fold(String::from(""), |acc, max| format!("{acc}{max}"))
-        .parse::<u128>()
-        .unwrap()
+    joltage
 }
 
-fn find_max_in_slice(lower: usize, upper: usize, slice: &[u8]) -> (u8, usize) {
-    let mut max: u8 = 0;
-    let mut max_index = lower;
-    for (&num, index) in slice.iter().zip(lower..upper) {
-        if num > max {
-            max = num;
-            max_index = index;
+fn find_max_in_slice(slice: &[u8]) -> (u8, usize) {
+    let mut max = 0;
+    let mut idx = 0;
+
+    for (i, &n) in slice.iter().enumerate() {
+        if n > max {
+            max = n;
+            idx = i;
         }
     }
 
-    (max, max_index)
+    (max, idx)
 }
 
 fn parse_file_into_banks(path: &str) -> io::Result<Vec<Vec<u8>>> {
