@@ -1,6 +1,9 @@
 use std::{
+    cmp::min,
     fs::{self},
     io::{self},
+    iter::Filter,
+    ops::RangeInclusive,
 };
 
 fn main() {
@@ -24,16 +27,12 @@ fn read_file(path: &str) -> io::Result<Vec<(usize, usize)>> {
         let mut splits = range.split('-');
 
         let lower = match splits.next() {
-            Some(v) => {
-                v.trim().parse::<usize>().expect("lower should be usize")
-            },
+            Some(v) => v.trim().parse::<usize>().expect("lower should be usize"),
             None => continue,
         };
 
         let upper = match splits.next() {
-            Some(v) => {
-                v.trim().parse::<usize>().expect("upper should be usize")
-            },
+            Some(v) => v.trim().parse::<usize>().expect("upper should be usize"),
             None => continue,
         };
 
@@ -43,18 +42,34 @@ fn read_file(path: &str) -> io::Result<Vec<(usize, usize)>> {
     Ok(result)
 }
 
-fn find_invalid_ids(lower: usize, upper: usize) -> Vec<usize> {
-    (lower..=upper)
-        .filter(|num| is_repeated_twice(num.to_string().as_str()))
-        .collect()
+fn find_invalid_ids(
+    lower: usize,
+    upper: usize,
+) -> Filter<RangeInclusive<usize>, impl FnMut(&usize) -> bool> {
+    (lower..=upper).filter(|num| is_repeated_at_least_twice(num.to_string().as_str()))
 }
 
-fn is_repeated_twice(s: &str) -> bool {
-    let n = s.len();
-    if n % 2 != 0 {
-        return false;
+fn is_repeated_at_least_twice(s: &str) -> bool {
+    let mut pattern = String::from("");
+    for current in s.chars() {
+        pattern.push(current);
+        let mut matches = 0;
+        loop {
+            let lower = min(pattern.len() * (1 + matches), s.len());
+            let upper = min(pattern.len() * (2 + matches), s.len());
+            let immediate = &s[lower..upper];
+
+            if matches > 0 && immediate == "" {
+                return true;
+            }
+
+            if pattern != immediate {
+                break;
+            }
+
+            matches += 1;
+        }
     }
 
-    let half = n / 2;
-    &s[..half] == &s[half..]
+    false
 }
