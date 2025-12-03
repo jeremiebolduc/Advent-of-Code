@@ -59,7 +59,7 @@ fn is_repeated_at_least_twice(s: &str) -> bool {
             let upper = min(pattern.len() * (2 + matches), s.len());
             let immediate = &s[lower..upper];
 
-            if matches > 0 && immediate == "" {
+            if matches > 0 && immediate.is_empty() {
                 return true;
             }
 
