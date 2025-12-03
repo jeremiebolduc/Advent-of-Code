@@ -5,17 +5,16 @@ use std::{
 
 fn main() {
     let rotations = read_file("input.txt").expect("the file should be read");
-    let mut zero_count = 0;
+    let mut zeros = 0;
     let mut start = 50;
 
     for rotation in rotations {
-        start = rotation.rotate(start);
-        if start == 0 {
-            zero_count += 1
-        }
+        let (pos, clicks) = rotation.rotate(start);
+        start = pos;
+        zeros += clicks
     }
 
-    println!("{zero_count}");
+    println!("{zeros}");
 }
 
 enum Rotation {
@@ -24,27 +23,30 @@ enum Rotation {
 }
 
 impl Rotation {
-    pub fn rotate(&self, start: usize) -> usize {
+    pub fn rotate(&self, start: usize) -> (usize, usize) {
+        let mut pos = start;
+        let mut zeros = 0;
+
         match self {
-            Rotation::Left(offset) => {
-                let mut diff = start as i32 - *offset as i32;
-                if diff < 0 {
-                    while diff < 0 {
-                        diff += 100;
+            Rotation::Left(k) => {
+                for _ in 0..*k {
+                    pos = (pos + 99) % 100;
+                    if pos == 0 {
+                        zeros += 1;
                     }
                 }
-                return diff as usize;
             }
-            Rotation::Right(offset) => {
-                let mut sum = start + *offset;
-                if sum >= 100 {
-                    while sum >= 100 {
-                        sum -= 100;
+            Rotation::Right(k) => {
+                for _ in 0..*k {
+                    pos = (pos + 1) % 100;
+                    if pos == 0 {
+                        zeros += 1;
                     }
                 }
-                return sum;
             }
         }
+
+        (pos, zeros)
     }
 }
 
@@ -59,7 +61,7 @@ fn read_file(path: &str) -> io::Result<Vec<Rotation>> {
         let offset = offset.parse::<usize>().expect("should be a usize");
 
         let rotation = match direction.to_uppercase().as_str() {
-            "L" => Rotation::Left(offset), 
+            "L" => Rotation::Left(offset),
             "R" => Rotation::Right(offset),
             _ => continue, // skip bad input
         };
